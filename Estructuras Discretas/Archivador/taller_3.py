@@ -140,42 +140,6 @@ class Arbol:
     def orden(self):
         return self.grado_arbol()
 
-    def buscar_por_nombre(self, nombre_buscado, nodo=None, encontrados=None):
-        """
-        Busca nodos por nombre, devuelve una lista de coincidencias
-        """
-        if encontrados is None:
-            encontrados = []
-
-        if nodo is None:
-            nodo = self.raiz
-
-        if nodo.nombre.lower() == nombre_buscado.lower():
-            encontrados.append(nodo)
-
-        for hijo in nodo.hijos:
-            self.buscar_por_nombre(nombre_buscado, hijo, encontrados)
-
-        return encontrados
-
-    def buscar_por_tipo(self, tipo_buscado, nodo=None, encontrados=None):
-        """
-        Con esto podemos buscar de acuerdo al tipo de archivo
-        """
-        if encontrados is None:
-            encontrados = []
-
-        if nodo is None:
-            nodo = self.raiz
-
-        if nodo.tipo.lower() == tipo_buscado.lower():
-            encontrados.append(nodo)
-
-        for hijo in nodo.hijos:
-            self.buscar_por_tipo(tipo_buscado, hijo, encontrados)
-
-        return encontrados
-
 
 def validar_archivo(df):
     """

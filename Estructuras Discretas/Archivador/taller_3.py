@@ -149,24 +149,80 @@ def validar_archivo(df):
         raise ValueError(f"Faltan columnas obligatorias: {faltantes}")
 
     if df.empty:
-        raise ValueError("El archivo excel está vacío")
+        raise ValueError("El archivo excel esta vacio")
 
-    if df["ID"].duplicated().any():
-        raise ValueError("Existen ID duplicados en el archivo")
+    notificaciones = []
+    indices_a_eliminar = []
+
+    # con esto revisamos las filas que le falten parametros
+    for indice, fila in df.iterrows():
+        campos_faltantes = []
+
+        for columna in COLUMNAS_REQUERIDAS:
+            if valor_vacio(fila[columna]):
+                campos_faltantes.append(columna)
+
+        if campos_faltantes:
+            notificaciones.append(describir_fila_con_error(fila, campos_faltantes))
+            indices_a_eliminar.append(indice)
+
+    # elimina las filas que no pueden cargarse
+    if indices_a_eliminar:
+        df = df.drop(indices_a_eliminar)
+
+    if df.empty:
+        raise ValueError("No existen datos validos para cargar el arbol")
 
     df["Nombre"] = df["Nombre"].astype(str).str.strip()
-    df["Tipo"] = df["Tipo"].astype(str).str.strip()
+    df["Tipo"] = df["Tipo"].astype(str).str.strip().str.capitalize()
     df["Área"] = df["Área"].astype(str).str.strip()
     df["Subárea"] = df["Subárea"].astype(str).str.strip()
 
+    if df["ID"].duplicated().any():
+        raise ValueError("Existen ID duplicados en los datos validos del archivo")
+
     tipos_validos = {"Carpeta", "Archivo"}
 
-    for tipo in df["Tipo"]:
+    for indice, fila in df.iterrows():
+        tipo = fila["Tipo"]
+
         if tipo not in tipos_validos:
-            raise ValueError(f"{tipo} es un tipo no valido de archivo, debe probar con: {tipos_validos}")
+            raise ValueError(f"{tipo} es un tipo no valido, debe probar con: {tipos_validos}")
 
-    return df
+    return df, notificaciones
 
+
+def valor_vacio(valor):
+    """
+    avisa si falta un parametro en el arcvhjivo (validacion de archivo)
+    """
+    if pd.isna(valor):
+        return True
+
+    if str(valor).strip() == "":
+        return True
+
+    return False
+
+
+def describir_fila_con_error(fila, campos_faltantes):
+    """
+    crea el texto de notificacion para una fila que no pudo cargarse (validacion de archivo)
+    """
+    partes = []
+
+    for columna in ["ID", "Nombre", "Tipo", "Área", "Subárea"]:
+        valor = fila.get(columna, None)
+
+        if valor_vacio(valor):
+            valor = "None"
+
+        partes.append(f"{columna}={valor}")
+
+    campos = ", ".join(campos_faltantes)
+    datos = ", ".join(partes)
+
+    return f"Dato con: {datos} no fue posible cargarse por tener parametro None en: {campos}"
 
 def generar_arbol(ruta_excel):
     """
@@ -174,7 +230,7 @@ def generar_arbol(ruta_excel):
     """
 
     df = pd.read_excel(ruta_excel, sheet_name="Registro de archivos")
-    df = validar_archivo(df)
+    df, notificaciones = validar_archivo(df)
 
     # Filtro de pandas para poder buscar el nodo raiz
     fila_raiz = df[
@@ -190,7 +246,7 @@ def generar_arbol(ruta_excel):
         datos_raiz = fila_raiz.iloc[0]
         raiz = Nodo(datos_raiz["ID"], datos_raiz["Nombre"], "Raíz", datos_raiz["Área"], datos_raiz["Subárea"])
 
-    arbol = Arbol(raiz)
+    arbol = Arbol(raiz, notificaciones)
 
     carpetas_principales = {}
     subcarpetas = {}
@@ -263,6 +319,17 @@ def generar_arbol(ruta_excel):
 
 def mostrar_formato_sistema_carpetas(arbol):
     arbol.mostrar_arbol()
+
+def mostrar_notificaciones_carga(arbol):
+    """
+    Muestra las filas que no pudieron cargarse por tener parametros faltantes
+    """
+    if not arbol.notificaciones_carga:
+        return
+
+    print("\nLineas con falla en la carga:")
+    for notificacion in arbol.notificaciones_carga:
+        print(f"- {notificacion}")
 
 def mostrar_recorrido_por_niveles(arbol):
     """

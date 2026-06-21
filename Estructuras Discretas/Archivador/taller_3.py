@@ -82,22 +82,17 @@ class Arbol:
 
         return resultado
 
-    def postorden(self, nodo=None, resultado=None):
+    def postorden(self, nodo=None):
         """
         con esto eliminamos primero el contenido antes que la carpeta padre.
         """
-        if resultado is None:
-            resultado = []
-
         if nodo is None:
             nodo = self.raiz
 
         for hijo in nodo.hijos:
-            self.postorden(hijo, resultado)
+            self.postorden(hijo)
 
-        resultado.append(nodo.nombre)
-
-        return resultado
+        nodo.hijos.clear()
 
     def recorrido_por_niveles(self):
         """
@@ -301,7 +296,6 @@ def generar_arbol(ruta_excel):
 
     return arbol
 
-
 def mostrar_formato_sistema_carpetas(arbol):
     arbol.mostrar_arbol()
 
@@ -316,11 +310,40 @@ def generar_respaldo(arbol):
     resultado = arbol.preorden()
     return resultado
 
-def eliminar_post_orden(arbol):
-    pass
+def eliminar_post_orden(arbol): #hay que eliminar post orden pero antes hay que guardar lo que se borra
+    opcion = 0
+    while(opcion == 0):
+        ruta = input("ingrese la ruta:")
+        direccion = ruta.split("/")
+        largo_ruta = len(direccion)
+        temporal = 0
+        nodo = arbol
+        nodo_padre = arbol
+        lista_hijos = []
+        temporal_lista = 1
+        while(temporal < largo_ruta):
+            if(direccion[temporal] == nodo.nombre):
+                temporal = temporal + 1
+                lista_hijos = nodo.hijos()
+                nodo_padre = nodo
+                nodo = lista_hijos[0]
+                if(temporal == largo_ruta):
+                    break
+                temporal_lista = 1
+            else:
+                if(temporal_lista < len(lista_hijos)):
+                    nodo = lista_hijos[temporal_lista]
+                    temporal_lista = temporal_lista + 1
+                else:
+                    print("la ruta no existe")
+                    print("1. volver a ingresar ruta")
+                    print("2. cancelar")
+                    opcion = int(input("ingrese: "))
+                    break
+        respaldo = nodo
+        arbol.postorden(nodo)
+        nodo_padre.hijos.pop(temporal_lista)
 
-def eliminar_refactorizar(arbol):
-    pass
     
 def ver_grados(arbol):
     pass #intuyo que se refiere a ver el grado de todos los nodos.
@@ -335,10 +358,9 @@ def menu():
     print("1. Mostrar la estructura (formato sistema de carpetas)")
     print("2. Mostrar la estructura por niveles")
     print("3. Generar respaldo (comenzando por las carpetas principales)")
-    print("4. Eliminar carpeta/archivo (se movera su contenido a una carpeta superior si existe)")
-    print("5. Eliminar carpeta/archivo (se eliminar su contenido)")
-    print("6. ver las propiedades del arbol")
-    print("7. salir")
+    print("4. Eliminar carpeta/archivo (se eliminar su contenido) pero este se respaldara")
+    print("5. ver las propiedades del arbol")
+    print("6. salir")
 
 """
 para eliminar hay que crear un formato que el usuario ingrese
@@ -357,7 +379,8 @@ if __name__ == "__main__":
     opcion_archivo = 0
     opcion = 0
     opcion_propiedades = 0
-    ultimo_respaldo = []
+    respaldo_arbol = []
+    respaldo_nodo = Nodo
     
     while(opcion_archivo == 0):
         ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
@@ -367,7 +390,7 @@ if __name__ == "__main__":
         try:
             arbol = generar_arbol(ruta_excel)
             print("\nArchivo cargado correctamente.")
-            while(opcion != 7):
+            while(opcion != 6):
                 menu()
                 opcion = int(input(""))
                 match opcion:
@@ -378,10 +401,12 @@ if __name__ == "__main__":
                     case 3:
                         ultima_respaldo = generar_respaldo(arbol) # no se que hacer con este respaldo pero porsiacaso lo guardo.
                     case 4:
-                        pass
+                        print("indique el nodo/archivo que desea eliminar con la siguiente estructura")
+                        print("ruta/y/nombre/exacto/a/borrar")
+                        print("donde la ruta ingresada sera el elemento a borrar")
+                        print("si no existe la ruta a borrar se le pedira ingresar una nueva o salir")
+                        eliminar_post_orden(arbol)
                     case 5:
-                        pass
-                    case 6:
                         menu_propiedades()
                         opcion_propiedades = int(input(""))
                         match opcion_propiedades:

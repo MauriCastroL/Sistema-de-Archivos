@@ -126,6 +126,7 @@ class Arbol:
         return 1 + max(self.altura(hijo) for hijo in nodo.hijos)
 
     def grado_arbol(self, nodo=None):
+        # Esta funcion muestra el grado del ARBOL: el max(nodo.hijo)
         if nodo is None:
             nodo = self.raiz
 
@@ -323,13 +324,31 @@ def eliminar_refactorizar(arbol):
     pass
     
 def ver_grados(arbol):
-    pass #intuyo que se refiere a ver el grado de todos los nodos.
+    # Muestro el grado del arbol
+    print(f"Grado del arbol: {arbol.grado_arbol()}")
+    
+    # Muestro el grado de cada nodo del arbol
+    def recorrer_preorden_grados(nodo, nivel=0):
+        sangria = "    " * nivel
+        print(f"{sangria}- {nodo.nombre} [{nodo.tipo}] -> Grado: {nodo.grado()}")
+
+        for hijo in nodo.hijos:
+            recorrer_preorden_grados(hijo, nivel + 1)
+
+    recorrer_preorden_grados(arbol.raiz)
     
 def ver_altura(arbol):
     print(f"orden: {arbol.altura()}")
     
 def ver_orden(arbol):
     print(f"orden: {arbol.orden()}")
+
+def leer_opcion(mensaje):
+    try:
+        return int(input(mensaje).strip())
+    except ValueError:
+        print("Debe ingresar un numero valido.")
+        return None
 
 def menu():
     print("1. Mostrar la estructura (formato sistema de carpetas)")
@@ -355,21 +374,28 @@ def menu_propiedades():
 
 if __name__ == "__main__":
     opcion_archivo = 0
-    opcion = 0
-    opcion_propiedades = 0
-    ultimo_respaldo = []
     
     while(opcion_archivo == 0):
         ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
     
         if ruta_excel == "":
             ruta_excel = "Metadatos.xlsx"
+
         try:
             arbol = generar_arbol(ruta_excel)
             print("\nArchivo cargado correctamente.")
+
+            opcion = 0
+            ultimo_respaldo = []
+
+
             while(opcion != 7):
                 menu()
-                opcion = int(input(""))
+                opcion = leer_opcion("Seleccione una opcion: ")
+
+                if opcion is None:
+                    continue
+
                 match opcion:
                     case 1:
                         mostrar_formato_sistema_carpetas(arbol)
@@ -382,15 +408,25 @@ if __name__ == "__main__":
                     case 5:
                         pass
                     case 6:
-                        menu_propiedades()
-                        opcion_propiedades = int(input(""))
-                        match opcion_propiedades:
-                            case 1:
-                                ver_grados(arbol)
-                            case 2:
-                                ver_altura(arbol)
-                            case 3:
-                                ver_orden(arbol)
+                        opcion_propiedades = 0
+                        while opcion_propiedades != 4:
+                            menu_propiedades()
+                            opcion_propiedades = leer_opcion("Seleccione una opcion: ")
+
+                            if opcion_propiedades is None:
+                                continue
+
+                            match opcion_propiedades:
+                                case 1:
+                                    ver_grados(arbol)
+                                case 2:
+                                    ver_altura(arbol)
+                                case 3:
+                                    ver_orden(arbol)
+                                case _:
+                                    print("Ingrese una opcion entre 1 y 4")
+                    case _:
+                        print('\nIngrese una opcion entre 1 y 7')
 
 
         except FileNotFoundError:
@@ -400,4 +436,6 @@ if __name__ == "__main__":
         except Exception as error:
             print(f"{error}")
 
-        opcion_archivo = int(input("si desea ingresar otro excel ingrese 0, de lo contrario digite 1."))
+        opcion_archivo = leer_opcion("Si desea ingresar otro excel ingrese 0, de lo contrario digite 1: ")
+        if opcion_archivo is None:
+            opcion_archivo = 1

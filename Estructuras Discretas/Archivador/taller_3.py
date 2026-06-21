@@ -121,6 +121,7 @@ class Arbol:
         return 1 + max(self.altura(hijo) for hijo in nodo.hijos)
 
     def grado_arbol(self, nodo=None):
+        # Esta funcion muestra el grado del ARBOL: el max(nodo.hijo)
         if nodo is None:
             nodo = self.raiz
 
@@ -133,42 +134,6 @@ class Arbol:
 
     def orden(self):
         return self.grado_arbol()
-
-    def buscar_por_nombre(self, nombre_buscado, nodo=None, encontrados=None):
-        """
-        Busca nodos por nombre, devuelve una lista de coincidencias
-        """
-        if encontrados is None:
-            encontrados = []
-
-        if nodo is None:
-            nodo = self.raiz
-
-        if nodo.nombre.lower() == nombre_buscado.lower():
-            encontrados.append(nodo)
-
-        for hijo in nodo.hijos:
-            self.buscar_por_nombre(nombre_buscado, hijo, encontrados)
-
-        return encontrados
-
-    def buscar_por_tipo(self, tipo_buscado, nodo=None, encontrados=None):
-        """
-        Con esto podemos buscar de acuerdo al tipo de archivo
-        """
-        if encontrados is None:
-            encontrados = []
-
-        if nodo is None:
-            nodo = self.raiz
-
-        if nodo.tipo.lower() == tipo_buscado.lower():
-            encontrados.append(nodo)
-
-        for hijo in nodo.hijos:
-            self.buscar_por_tipo(tipo_buscado, hijo, encontrados)
-
-        return encontrados
 
 
 def validar_archivo(df):
@@ -346,13 +311,31 @@ def eliminar_post_orden(arbol): #hay que eliminar post orden pero antes hay que 
 
     
 def ver_grados(arbol):
-    pass #intuyo que se refiere a ver el grado de todos los nodos.
+    # Muestro el grado del arbol
+    print(f"Grado del arbol: {arbol.grado_arbol()}")
+    
+    # Muestro el grado de cada nodo del arbol
+    def recorrer_preorden_grados(nodo, nivel=0):
+        sangria = "    " * nivel
+        print(f"{sangria}- {nodo.nombre} [{nodo.tipo}] -> Grado: {nodo.grado()}")
+
+        for hijo in nodo.hijos:
+            recorrer_preorden_grados(hijo, nivel + 1)
+
+    recorrer_preorden_grados(arbol.raiz)
     
 def ver_altura(arbol):
     print(f"orden: {arbol.altura()}")
     
 def ver_orden(arbol):
     print(f"orden: {arbol.orden()}")
+
+def leer_opcion(mensaje):
+    try:
+        return int(input(mensaje).strip())
+    except ValueError:
+        print("Debe ingresar un numero valido.")
+        return None
 
 def menu():
     print("1. Mostrar la estructura (formato sistema de carpetas)")
@@ -387,12 +370,17 @@ if __name__ == "__main__":
     
         if ruta_excel == "":
             ruta_excel = "Metadatos.xlsx"
+
         try:
             arbol = generar_arbol(ruta_excel)
             print("\nArchivo cargado correctamente.")
             while(opcion != 6):
                 menu()
-                opcion = int(input(""))
+                opcion = leer_opcion("Seleccione una opcion: ")
+
+                if opcion is None:
+                    continue
+
                 match opcion:
                     case 1:
                         mostrar_formato_sistema_carpetas(arbol)
@@ -425,4 +413,6 @@ if __name__ == "__main__":
         except Exception as error:
             print(f"{error}")
 
-        opcion_archivo = int(input("si desea ingresar otro excel ingrese 0, de lo contrario digite 1."))
+        opcion_archivo = leer_opcion("Si desea ingresar otro excel ingrese 0, de lo contrario digite 1: ")
+        if opcion_archivo is None:
+            opcion_archivo = 1

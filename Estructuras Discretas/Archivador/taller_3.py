@@ -302,6 +302,9 @@ def generar_arbol(ruta_excel):
     return arbol
 
 
+def mostrar_formato_sistema_carpetas(arbol):
+    arbol.mostrar_arbol()
+
 def mostrar_recorrido_por_niveles(arbol):
     """
     Muestra el recorrido por niveles en consola.
@@ -309,26 +312,92 @@ def mostrar_recorrido_por_niveles(arbol):
     for nivel, nombre in arbol.recorrido_por_niveles():
         print(f"Nivel {nivel}: {nombre}")
 
+def generar_respaldo(arbol):
+    resultado = arbol.preorden()
+    return resultado
 
-def menu(arbol):
-    # TODO: Aqui los outputs que pide Eric trolillo
+def eliminar_post_orden(arbol):
     pass
 
+def eliminar_refactorizar(arbol):
+    pass
+    
+def ver_grados(arbol):
+    pass #intuyo que se refiere a ver el grado de todos los nodos.
+    
+def ver_altura(arbol):
+    print(f"orden: {arbol.altura()}")
+    
+def ver_orden(arbol):
+    print(f"orden: {arbol.orden()}")
+
+def menu():
+    print("1. Mostrar la estructura (formato sistema de carpetas)")
+    print("2. Mostrar la estructura por niveles")
+    print("3. Generar respaldo (comenzando por las carpetas principales)")
+    print("4. Eliminar carpeta/archivo (se movera su contenido a una carpeta superior si existe)")
+    print("5. Eliminar carpeta/archivo (se eliminar su contenido)")
+    print("6. ver las propiedades del arbol")
+    print("7. salir")
+
+"""
+para eliminar hay que crear un formato que el usuario ingrese
+cuando ingrese este formato hay que validar que sea correcto y
+validar que el archivo o carpeta existe.
+Nota: el eliminar con su contenido se puede hacer con el post-orden.
+"""
+
+def menu_propiedades():
+    print("1. mostrar grado")
+    print("2. ver altura")
+    print("3. ver orden")
+    print("4. cancelar")
+
 if __name__ == "__main__":
-    ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
+    opcion_archivo = 0
+    opcion = 0
+    opcion_propiedades = 0
+    ultimo_respaldo = []
+    
+    while(opcion_archivo == 0):
+        ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
+    
+        if ruta_excel == "":
+            ruta_excel = "Metadatos.xlsx"
+        try:
+            arbol = generar_arbol(ruta_excel)
+            print("\nArchivo cargado correctamente.")
+            while(opcion != 7):
+                menu()
+                opcion = int(input(""))
+                match opcion:
+                    case 1:
+                        mostrar_formato_sistema_carpetas(arbol)
+                    case 2:
+                        mostrar_recorrido_por_niveles(arbol)
+                    case 3:
+                        ultima_respaldo = generar_respaldo(arbol) # no se que hacer con este respaldo pero porsiacaso lo guardo.
+                    case 4:
+                        pass
+                    case 5:
+                        pass
+                    case 6:
+                        menu_propiedades()
+                        opcion_propiedades = int(input(""))
+                        match opcion_propiedades:
+                            case 1:
+                                ver_grados(arbol)
+                            case 2:
+                                ver_altura(arbol)
+                            case 3:
+                                ver_orden(arbol)
 
-    if ruta_excel == "":
-        ruta_excel = "Metadatos.xlsx"
 
-    try:
-        arbol = generar_arbol(ruta_excel)
-        print("\nArchivo cargado correctamente.")
+        except FileNotFoundError:
+            print("No se encontro el archivo")
+        except ValueError as error:
+            print(f"Hubo un error: {error}")
+        except Exception as error:
+            print(f"{error}")
 
-        menu(arbol)
-
-    except FileNotFoundError:
-        print("No se encontro el archivo")
-    except ValueError as error:
-        print(f"Hubo un error: {error}")
-    except Exception as error:
-        print(f"{error}")
+        opcion_archivo = int(input("si desea ingresar otro excel ingrese 0, de lo contrario digite 1."))

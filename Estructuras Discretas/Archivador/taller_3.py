@@ -342,41 +342,93 @@ def generar_respaldo(arbol):
     resultado = arbol.preorden()
     return resultado
 
-def eliminar_post_orden(arbol): #hay que eliminar post orden pero antes hay que guardar lo que se borra
-    opcion = 0
-    while(opcion == 0):
-        ruta = input("ingrese la ruta:")
-        direccion = ruta.split("/")
-        largo_ruta = len(direccion)
-        temporal = 0
-        nodo = arbol
-        nodo_padre = arbol
-        lista_hijos = []
-        temporal_lista = 1
-        while(temporal < largo_ruta):
-            if(direccion[temporal] == nodo.nombre):
-                temporal = temporal + 1
-                lista_hijos = nodo.hijos()
-                nodo_padre = nodo
-                nodo = lista_hijos[0]
-                if(temporal == largo_ruta):
-                    break
-                temporal_lista = 1
-            else:
-                if(temporal_lista < len(lista_hijos)):
-                    nodo = lista_hijos[temporal_lista]
-                    temporal_lista = temporal_lista + 1
-                else:
-                    print("la ruta no existe")
-                    print("1. volver a ingresar ruta")
-                    print("2. cancelar")
-                    opcion = int(input("ingrese: "))
-                    break
-        respaldo = nodo
-        arbol.postorden(nodo)
-        nodo_padre.hijos.pop(temporal_lista)
-
+def eliminar_post_orden(arbol):
+    """
+    Busca una ruta exacta, pide confirmación, guarda un respaldo
+    de lo que se va a borrar, y luego elimina el nodo y su contenido.
+    """
+    opcion = 1
+    respaldo = None
     
+    while opcion == 1:
+        ruta = input("Ingrese la ruta (ej: Servidor_Principal/Finanzas/Contratos): ").strip()
+        
+        if not ruta:
+            print("La ruta no puede estar vacía.")
+            continue
+            
+        direccion = ruta.split("/")
+        
+        # 1. Validación: escritura erronea de la raiz
+        nodo_actual = arbol.raiz
+        if direccion[0] != nodo_actual.nombre:
+            print(f"Error: La ruta debe iniciar correctamente con la raiz '{nodo_actual.nombre}'.")
+            print("1. Volver a intentar")
+            print("2. Cancelar")
+            opcion = int(input("Ingrese: "))
+            continue
+
+        # 2. Validación: No permitir borrar el servidor entero desde aquí
+        if len(direccion) == 1:
+            print("Error: No está permitido eliminar el nodo raíz principal.")
+            print("1. Volver a intentar")
+            print("2. Cancelar")
+            opcion = int(input("Ingrese: "))
+            continue
+
+        nodo_padre = None
+        ruta_valida = True
+        
+        # 3. Navegacion nivel por nivel (omitimos [0] porque ya validamos la raíz)
+        for parte in direccion[1:]:
+            nodo_padre = nodo_actual
+            encontrado = False
+            
+            # Buscamos 'parte' entre los hijos del nodo actual
+            for hijo in nodo_actual.hijos:
+                if hijo.nombre == parte:
+                    nodo_actual = hijo
+                    encontrado = True
+                    break
+            
+            # 4. Validación: ¿Qué pasa si la carpeta/archivo no existe?
+            if not encontrado:
+                ruta_valida = False
+                print(f"Error: No se encontró '{parte}' en la ruta especificada.")
+                break
+        
+        # Si la ruta fallo
+        if not ruta_valida:
+            print("1. Volver a intentar")
+            print("2. Cancelar")
+            opcion = int(input("Ingrese: "))
+            continue
+            
+        # 5. Proceso Final: Si llegamos aquí, la ruta existe y es correcta
+        print(f"\nSe encontró: {nodo_actual.nombre} ({nodo_actual.tipo})")
+        print("1. Para eliminar el elemento (y su contenido) y guardar el respaldo")
+        print("2. Para anular operación")
+        opcion_final = int(input("Ingrese: "))
+        
+        if opcion_final == 1:
+            # A) Guardamos el respaldo ANTES de eliminar el contenido.
+            respaldo = arbol.preorden(nodo_actual)
+            
+            # B) Vaciamos el contenido usando la función postorden
+            arbol.postorden(nodo_actual)
+            
+            # C) Eliminamos el nodo de su padre
+            nodo_padre.hijos.remove(nodo_actual)
+            
+            print(f"Elemento '{nodo_actual.nombre}' eliminado.")
+            print(f"Respaldo generado: {respaldo}")
+            break
+        else:
+            print("Operacion anulada.")
+            break
+            
+    return respaldo
+  
 def ver_grados(arbol):
     # Muestro el grado del arbol
     print(f"Grado del arbol: {arbol.grado_arbol()}")
@@ -411,13 +463,6 @@ def menu():
     print("4. Eliminar carpeta/archivo (se eliminar su contenido) pero este se respaldara")
     print("5. ver las propiedades del arbol")
     print("6. salir")
-
-"""
-para eliminar hay que crear un formato que el usuario ingrese
-cuando ingrese este formato hay que validar que sea correcto y
-validar que el archivo o carpeta existe.
-Nota: el eliminar con su contenido se puede hacer con el post-orden.
-"""
 
 def menu_propiedades():
     print("1. mostrar grado")
